@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#0a0a0a">
+    <title>Innertai OS</title>
+    
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        body { background-color: #0a0a0a; color: #ffffff; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+        .app-header { padding: 20px; padding-top: max(20px, env(safe-area-inset-top)); background-color: rgba(10, 10, 10, 0.9); backdrop-filter: blur(10px); border-bottom: 1px solid #1f1f1f; display: flex; justify-content: space-between; align-items: center; z-index: 10; }
+        .app-header h1 { font-size: 20px; font-weight: 700; letter-spacing: 0.5px; }
+        .app-header span { color: #00ffcc; }
+
+        .app-screen { display: none; flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 90px; }
+        .app-screen.active { display: block; animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .input-card { background-color: #141414; border-radius: 16px; padding: 16px; border: 1px solid #222; box-shadow: 0 4px 20px rgba(0,0,0,0.5); margin-bottom: 24px; }
+        textarea { width: 100%; height: 90px; background-color: transparent; color: #fff; border: none; font-size: 16px; resize: none; }
+        textarea:focus { outline: none; }
+        button.primary-btn { background-color: #00ffcc; color: #000; border: none; padding: 16px; font-size: 16px; font-weight: 700; border-radius: 12px; cursor: pointer; width: 100%; transition: 0.2s; margin-top: 8px; }
+        button.primary-btn:active { transform: scale(0.98); }
+        #status { text-align: center; font-size: 13px; margin-top: 12px; height: 16px;}
+
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .section-header h2 { font-size: 18px; font-weight: 600; }
+        .refresh-btn { background: #222; border: none; color: #fff; padding: 6px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; }
+
+        .card-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 28px; }
+        .schedule-card, .reminder-card { background-color: #1a1a1a; padding: 16px; border-radius: 14px; display: flex; justify-content: space-between; align-items: center; border-left: 3px solid transparent; }
+        .schedule-card { border-left-color: #00ffcc; }
+        .reminder-card { border-left-color: #ffb703; }
+        .routine-card { border-left-color: #888; background-color: #141414; }
+        
+        .card-content { display: flex; flex-direction: column; gap: 4px; flex: 1; margin-right: 12px; }
+        .schedule-time { font-size: 13px; color: #00ffcc; font-weight: 700; }
+        .reminder-time { font-size: 13px; color: #ffb703; font-weight: 700; text-transform: uppercase; }
+        .item-name { font-size: 16px; color: #f0f0f0; font-weight: 500; }
+        
+        .action-group { display: flex; gap: 8px; align-items: center; }
+        .icon-btn { background: #2a2a2a; border: none; color: #888; border-radius: 8px; width: 32px; height: 32px; font-size: 14px; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: 0.2s; }
+        .icon-btn:hover { background: #444; color: #fff; }
+        .icon-btn.active-repeat { background: rgba(0, 255, 204, 0.1); color: #00ffcc; border: 1px solid #00ffcc; }
+        
+        .complete-btn { background: transparent; border: 2px solid #444; color: #444; border-radius: 50%; width: 32px; height: 32px; font-size: 14px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .schedule-card .complete-btn:hover { background: #00ffcc; color: #000; border-color: #00ffcc; }
+        .reminder-card .complete-btn:hover { background: #ffb703; color: #000; border-color: #ffb703; }
+
+        .empty-state { text-align: center; color: #555; padding: 20px; font-size: 14px; font-style: italic; }
+
+        /* Analytics Dashboard Styles */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+        .stat-box { background: #141414; padding: 20px; border-radius: 16px; border: 1px solid #222; text-align: center; }
+        .stat-box.large { grid-column: span 2; border-color: #00ffcc; background: rgba(0, 255, 204, 0.05); }
+        .stat-value { font-size: 32px; font-weight: 800; color: #fff; margin-bottom: 4px; }
+        .stat-box.large .stat-value { color: #00ffcc; font-size: 48px; }
+        .stat-label { font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 1px; }
+        .ai-insight-box { background: #1a1a1a; padding: 20px; border-radius: 16px; border-left: 4px solid #00ffcc; font-size: 15px; line-height: 1.5; color: #ddd; font-style: italic; display: none; }
+
+        /* Bottom Nav & SVG Icons */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background-color: rgba(15, 15, 15, 0.95); backdrop-filter: blur(10px); border-top: 1px solid #222; display: flex; justify-content: space-around; padding: 16px 0; padding-bottom: max(16px, env(safe-area-inset-bottom)); z-index: 10; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #555; font-size: 11px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .nav-item.active { color: #00ffcc; }
+        .nav-icon { width: 24px; height: 24px; background-color: currentColor; -webkit-mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>'); -webkit-mask-size: cover; }
+        .nav-icon-routines { width: 24px; height: 24px; background-color: currentColor; -webkit-mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>'); -webkit-mask-size: cover; }
+        .nav-icon-chart { width: 24px; height: 24px; background-color: currentColor; -webkit-mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>'); -webkit-mask-size: cover; }
+    </style>
+</head>
+<body>
+
+    <div class="app-header">
+        <h1>Innertai<span>OS</span></h1>
+    </div>
+
+    <!-- 1. HOME SCREEN -->
+    <div id="screen-home" class="app-screen active">
+        <div class="input-card">
+            <h2 style="font-size: 14px; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">Command Center</h2>
+            <textarea id="taskInput" placeholder="E.g., Review agency leads at 2 PM. Code HTML/CSS everyday at 8 PM."></textarea>
+            <button onclick="sendTasks()" id="planBtn" class="primary-btn">Initialize</button>
+            <div id="status"></div>
+        </div>
+
+        <div class="section-header">
+            <h2>Reminders</h2>
+            <span style="font-size: 11px; color: #ffb703; background: rgba(255, 183, 3, 0.1); padding: 4px 8px; border-radius: 8px; font-weight: bold;">Critical</span>
+        </div>
+        <div id="remindersList" class="card-list"></div>
+
+        <div class="section-header">
+            <h2>Today's Schedule</h2>
+            <button class="refresh-btn" onclick="fetchTasks()">Refresh</button>
+        </div>
+        <div id="taskList" class="card-list"></div>
+    </div>
+
+    <!-- 2. ROUTINES SCREEN -->
+    <div id="screen-routines" class="app-screen">
+        <div class="section-header" style="margin-bottom: 24px;">
+            <h2>Everyday Routines</h2>
+            <span style="font-size: 12px; color: #888;">Saved Templates</span>
+        </div>
+        <p style="color: #666; font-size: 14px; margin-bottom: 20px;">These tasks automatically reset at midnight and appear on your Home schedule tomorrow.</p>
+        <div id="savedList" class="card-list"></div>
+    </div>
+
+    <!-- 3. PRODUCTIVITY SCREEN -->
+    <div id="screen-productivity" class="app-screen">
+        <div class="section-header" style="margin-bottom: 24px;">
+            <h2>Performance</h2>
+            <button class="refresh-btn" onclick="fetchAnalytics()" id="analyzeBtn" style="background: #00ffcc; color: #000; font-weight: bold;">Analyze</button>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-box large">
+                <div class="stat-value" id="winRateVal">--%</div>
+                <div class="stat-label">Overall Win Rate</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="completedVal">--</div>
+                <div class="stat-label">Completed</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="missedVal" style="color: #ff4444;">--</div>
+                <div class="stat-label">Missed</div>
+            </div>
+        </div>
+
+        <div id="aiInsight" class="ai-insight-box">
+            <!-- AI text appears here -->
+        </div>
+    </div>
+
+    <!-- BOTTOM NAVIGATION BAR -->
+    <div class="bottom-nav">
+        <div id="nav-home" class="nav-item active" onclick="switchTab('home')">
+            <div class="nav-icon"></div><span>Home</span>
+        </div>
+        <div id="nav-routines" class="nav-item" onclick="switchTab('routines')">
+            <div class="nav-icon-routines"></div><span>Routines</span>
+        </div>
+        <div id="nav-productivity" class="nav-item" onclick="switchTab('productivity')">
+            <div class="nav-icon-chart"></div><span>Productivity</span>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tabName) {
+            document.querySelectorAll('.app-screen').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById(`screen-${tabName}`).classList.add('active');
+            document.getElementById(`nav-${tabName}`).classList.add('active');
+        }
+
+        async function fetchAnalytics() {
+            const btn = document.getElementById('analyzeBtn');
+            const insightBox = document.getElementById('aiInsight');
+            
+            btn.innerText = "Analyzing...";
+            btn.style.opacity = "0.5";
+
+            try {
+                const response = await fetch('/analyze');
+                const data = await response.json();
+
+                document.getElementById('winRateVal').innerText = data.win_rate + '%';
+                document.getElementById('completedVal').innerText = data.completed;
+                document.getElementById('missedVal').innerText = data.missed;
+
+                insightBox.innerText = `"${data.insight}" - Innertai AI`;
+                insightBox.style.display = "block";
+            } catch (error) {
+                insightBox.innerText = "Failed to connect to AI Core.";
+                insightBox.style.display = "block";
+            }
+            
+            btn.innerText = "Analyze";
+            btn.style.opacity = "1";
+        }
+
+        async function fetchTasks() {
+            try {
+                const response = await fetch('/tasks');
+                const data = await response.json();
+                
+                const remindersList = document.getElementById('remindersList');
+                if (data.reminders.length === 0) {
+                    remindersList.innerHTML = "<div class='empty-state'>No critical reminders.</div>";
+                } else {
+                    remindersList.innerHTML = data.reminders.map(rem => `
+                        <div class="reminder-card">
+                            <div class="card-content">
+                                <div class="reminder-time">${rem.due_date} | ${rem.time_context}</div>
+                                <div class="item-name">${rem.item_name}</div>
+                            </div>
+                            <button class="complete-btn" onclick="completeItem('reminder', ${rem.id})">✓</button>
+                        </div>
+                    `).join('');
+                }
+
+                const pendingTasks = data.tasks.filter(t => t.status === 'pending');
+                const savedTasks = data.tasks.filter(t => t.is_recurring);
+
+                const taskList = document.getElementById('taskList');
+                if (pendingTasks.length === 0) {
+                    taskList.innerHTML = "<div class='empty-state'>Schedule is clear.</div>";
+                } else {
+                    taskList.innerHTML = pendingTasks.map(task => `
+                        <div class="schedule-card">
+                            <div class="card-content">
+                                <div class="schedule-time">${task.scheduled_time}</div>
+                                <div class="item-name">${task.task_name}</div>
+                            </div>
+                            <div class="action-group">
+                                <button class="icon-btn ${task.is_recurring ? 'active-repeat' : ''}" onclick="toggleRecurring(${task.id})" title="Toggle Everyday">🔁</button>
+                                <button class="complete-btn" onclick="completeItem('task', ${task.id})" title="Complete">✓</button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+
+                const savedList = document.getElementById('savedList');
+                if (savedTasks.length === 0) {
+                    savedList.innerHTML = "<div class='empty-state'>No everyday routines saved.</div>";
+                } else {
+                    savedList.innerHTML = savedTasks.map(task => `
+                        <div class="schedule-card routine-card">
+                            <div class="card-content">
+                                <div class="schedule-time" style="color:#888;">${task.scheduled_time}</div>
+                                <div class="item-name">${task.task_name}</div>
+                            </div>
+                            <div class="action-group">
+                                <button class="icon-btn" onclick="editTask(${task.id}, '${task.task_name}', '${task.scheduled_time}')" title="Edit Template">✏️</button>
+                                <button class="icon-btn active-repeat" onclick="toggleRecurring(${task.id})" title="Remove from Routines">❌</button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                console.log("Failed to load tasks.");
+            }
+        }
+
+        async function editTask(id, currentName, currentTime) {
+            const newName = prompt("Edit Task Name:", currentName);
+            if (newName === null || newName.trim() === "") return;
+            const newTime = prompt("Edit Time (e.g., 05:00 PM):", currentTime);
+            if (newTime === null || newTime.trim() === "") return;
+
+            await fetch(`/edit_task/${id}`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ task_name: newName, scheduled_time: newTime })
+            });
+            fetchTasks();
+        }
+
+        async function toggleRecurring(id) {
+            await fetch(`/toggle_recurring/${id}`, { method: 'POST' });
+            fetchTasks();
+        }
+
+        async function completeItem(type, id) {
+            const endpoint = type === 'task' ? `/complete_task/${id}` : `/complete_reminder/${id}`;
+            await fetch(endpoint, { method: 'POST' });
+            fetchTasks();
+        }
+
+        async function sendTasks() {
+            const input = document.getElementById('taskInput').value;
+            const statusText = document.getElementById('status');
+            const btn = document.getElementById('planBtn');
+            if(!input) return;
+
+            btn.innerText = "Processing..."; statusText.innerText = "Routing to AI...";
+            try {
+                const response = await fetch('/plan', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tasks: input })
+                });
+                const data = await response.json();
+                if(data.status === "success") {
+                    document.getElementById('taskInput').value = ''; fetchTasks(); 
+                }
+            } catch (error) {
+                statusText.innerText = "Connection dropped.";
+            }
+            btn.innerText = "Initialize"; statusText.innerText = "";
+        }
+
+        window.onload = fetchTasks;
+    </script>
+</body>
+</html>

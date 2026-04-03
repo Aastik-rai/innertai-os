@@ -1,0 +1,12 @@
+Security: Never upload environment variables!
+
+.env
+
+Database: Let the cloud create its own fresh database
+
+planner.db
+
+Python caches
+
+pycache/
+*.pyc
