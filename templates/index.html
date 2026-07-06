@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#f7f7f5">
+    <title>Innertai — Daily planner</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body class="app-body">
+    <div class="app-layout">
+        <aside class="sidebar">
+            <a class="brand" href="/" aria-label="Innertai home">
+                <span class="brand-mark">I</span>
+                <span>Innertai</span>
+            </a>
+
+            <nav class="main-nav" aria-label="Main navigation">
+                <button class="nav-link active" data-tab="home" type="button">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.8 12 3l9 7.8V21a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1V10.8Z"/></svg>
+                    <span>Today</span>
+                </button>
+                <button class="nav-link" data-tab="routines" type="button">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7h-4V3M4 17h4v4m11.1-9a7 7 0 0 0-11.9-5L4 10m16 4-3.2 3a7 7 0 0 1-11.9-5"/></svg>
+                    <span>Routines</span>
+                </button>
+                <button class="nav-link" data-tab="productivity" type="button">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10m6 10V4m6 16v-7m4 7H2"/></svg>
+                    <span>Insights</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-avatar">{{ username[0]|upper }}</div>
+                <div class="user-meta">
+                    <strong>{{ username }}</strong>
+                    <span>Personal workspace</span>
+                </div>
+                <a class="logout-link" href="/logout" aria-label="Log out" title="Log out">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 17l5-5-5-5m5 5H3m11-9h6a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1h-6"/></svg>
+                </a>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="topbar">
+                <div>
+                    <p class="eyebrow" id="currentDate">Today</p>
+                    <h1 id="pageTitle">Good day, {{ username }}</h1>
+                </div>
+                <button class="icon-button" id="refreshButton" type="button" aria-label="Refresh tasks" title="Refresh tasks">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6v5h-5M4 18v-5h5m9.5-4A7 7 0 0 0 6.2 6.2L4 8m16 8-2.2 1.8A7 7 0 0 1 5.5 15"/></svg>
+                </button>
+            </header>
+
+            <section id="screen-home" class="app-screen active" aria-labelledby="pageTitle">
+                <div class="composer-card">
+                    <div class="composer-heading">
+                        <div class="composer-icon">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3Zm7 12 .8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15Z"/></svg>
+                        </div>
+                        <div>
+                            <h2>What would you like to plan?</h2>
+                            <p>Write naturally — include a time, date, or “every day”.</p>
+                        </div>
+                    </div>
+                    <textarea id="taskInput" rows="3" placeholder="For example: Call Kapil at 2:30 PM today"></textarea>
+                    <div class="composer-actions">
+                        <span id="status" role="status" aria-live="polite"></span>
+                        <button id="planBtn" class="primary-button" type="button">
+                            <span>Add to my day</span>
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid">
+                    <section class="content-card schedule-panel">
+                        <div class="section-heading">
+                            <div>
+                                <p class="section-kicker">Schedule</p>
+                                <h2>Today’s tasks</h2>
+                            </div>
+                            <span class="count-badge" id="taskCount">0</span>
+                        </div>
+                        <div id="taskList" class="item-list"></div>
+                    </section>
+
+                    <section class="content-card reminder-panel">
+                        <div class="section-heading">
+                            <div>
+                                <p class="section-kicker amber">Keep in mind</p>
+                                <h2>Reminders</h2>
+                            </div>
+                            <span class="count-badge warm" id="reminderCount">0</span>
+                        </div>
+                        <div id="remindersList" class="item-list"></div>
+                    </section>
+                </div>
+            </section>
+
+            <section id="screen-routines" class="app-screen">
+                <div class="page-intro">
+                    <p class="eyebrow">Your rhythm</p>
+                    <h1>Recurring routines</h1>
+                    <p>Tasks saved here return to your schedule automatically each day.</p>
+                </div>
+                <section class="content-card wide-card">
+                    <div class="section-heading">
+                        <div>
+                            <p class="section-kicker">Daily</p>
+                            <h2>Saved routines</h2>
+                        </div>
+                        <span class="count-badge" id="routineCount">0</span>
+                    </div>
+                    <div id="savedList" class="item-list routine-grid"></div>
+                </section>
+            </section>
+
+            <section id="screen-productivity" class="app-screen">
+                <div class="page-intro insight-intro">
+                    <div>
+                        <p class="eyebrow">Your progress</p>
+                        <h1>Productivity insights</h1>
+                        <p>A simple view of how consistently you’re following through.</p>
+                    </div>
+                    <button id="analyzeBtn" class="secondary-button" type="button">Refresh insight</button>
+                </div>
+
+                <div class="stats-grid">
+                    <article class="stat-card accent-stat">
+                        <span class="stat-label">Completion rate</span>
+                        <strong class="stat-value" id="winRateVal">—</strong>
+                        <span class="stat-caption">Across all tracked tasks</span>
+                    </article>
+                    <article class="stat-card">
+                        <span class="stat-icon success">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>
+                        </span>
+                        <span class="stat-label">Completed</span>
+                        <strong class="stat-value small" id="completedVal">—</strong>
+                    </article>
+                    <article class="stat-card">
+                        <span class="stat-icon missed">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17"/></svg>
+                        </span>
+                        <span class="stat-label">Missed</span>
+                        <strong class="stat-value small" id="missedVal">—</strong>
+                    </article>
+                </div>
+
+                <article id="aiInsight" class="insight-card" hidden>
+                    <div class="insight-mark">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3Z"/></svg>
+                    </div>
+                    <div>
+                        <span>Personal insight</span>
+                        <p id="insightText"></p>
+                    </div>
+                </article>
+            </section>
+        </main>
+
+        <nav class="mobile-nav" aria-label="Mobile navigation">
+            <button class="mobile-nav-link active" data-tab="home" type="button">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.8 12 3l9 7.8V21a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1V10.8Z"/></svg><span>Today</span>
+            </button>
+            <button class="mobile-nav-link" data-tab="routines" type="button">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7h-4V3M4 17h4v4m11.1-9a7 7 0 0 0-11.9-5L4 10m16 4-3.2 3a7 7 0 0 1-11.9-5"/></svg><span>Routines</span>
+            </button>
+            <button class="mobile-nav-link" data-tab="productivity" type="button">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10m6 10V4m6 16v-7m4 7H2"/></svg><span>Insights</span>
+            </button>
+        </nav>
+    </div>
+
+    <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+</body>
+</html>

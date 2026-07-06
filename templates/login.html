@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f7f7f5">
+    <title>Sign in — Innertai</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body class="auth-body">
+    <main class="auth-layout">
+        <section class="auth-brand-panel">
+            <a class="brand auth-brand" href="/">
+                <span class="brand-mark light">I</span>
+                <span>Innertai</span>
+            </a>
+            <div class="auth-message">
+                <p class="eyebrow light-text">Plan with less friction</p>
+                <h1>A calmer way to organize your day.</h1>
+                <p>Turn everyday language into a clear schedule, keep routines consistent, and receive reminders where you’ll see them.</p>
+            </div>
+            <div class="auth-feature-list">
+                <div><span>01</span><p>Natural-language planning</p></div>
+                <div><span>02</span><p>WhatsApp reminders</p></div>
+                <div><span>03</span><p>Simple progress insights</p></div>
+            </div>
+        </section>
+
+        <section class="auth-form-panel">
+            <div class="auth-form-wrap">
+                <div id="login-form" class="auth-form-view">
+                    <div class="auth-heading">
+                        <p class="eyebrow">Welcome back</p>
+                        <h2>Sign in to your planner</h2>
+                        <p>Continue where you left off.</p>
+                    </div>
+                    <div id="error-msg" class="form-alert" role="alert" hidden></div>
+                    <form id="loginForm">
+                        <label for="log-username">Username</label>
+                        <input type="text" id="log-username" autocomplete="username" placeholder="Enter your username" required>
+                        <label for="log-password">Password</label>
+                        <input type="password" id="log-password" autocomplete="current-password" placeholder="Enter your password" required>
+                        <button class="primary-button auth-submit" type="submit">Sign in</button>
+                    </form>
+                    <p class="auth-switch">New to Innertai? <button type="button" data-auth-mode="register">Create an account</button></p>
+                </div>
+
+                <div id="register-form" class="auth-form-view" hidden>
+                    <div class="auth-heading">
+                        <p class="eyebrow">Get started</p>
+                        <h2>Create your account</h2>
+                        <p>Set up your personal planner in a minute.</p>
+                    </div>
+                    <div id="register-error-msg" class="form-alert" role="alert" hidden></div>
+                    <form id="registerForm">
+                        <label for="reg-username">Username</label>
+                        <input type="text" id="reg-username" autocomplete="username" placeholder="Choose a username" required>
+                        <label for="reg-password">Password</label>
+                        <input type="password" id="reg-password" autocomplete="new-password" minlength="6" placeholder="At least 6 characters" required>
+                        <label for="reg-phone">WhatsApp number <span>Optional</span></label>
+                        <input type="tel" id="reg-phone" autocomplete="tel" placeholder="+91 98765 43210">
+                        <button class="primary-button auth-submit" type="submit">Create account</button>
+                    </form>
+                    <p class="auth-switch">Already have an account? <button type="button" data-auth-mode="login">Sign in</button></p>
+                </div>
+            </div>
+        </section>
+    </main>
+    <script src="{{ url_for('static', filename='auth.js') }}" defer></script>
+</body>
+</html>

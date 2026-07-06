@@ -1,0 +1,6 @@
+Flask==3.0.3
+google-genai==2.10.0
+twilio==9.0.4
+APScheduler==3.10.4
+python-dotenv==1.0.1
+gunicorn==22.0.0
